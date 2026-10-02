@@ -71,6 +71,11 @@ export function ParticleField({ start }: { start: boolean }) {
     const setup = () => {
       w = canvas.clientWidth
       h = canvas.clientHeight
+      if (w === 0 || h === 0) {
+        particles = []
+        nodes = []
+        return
+      }
       canvas.width = w * dpr
       canvas.height = h * dpr
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -242,14 +247,17 @@ export function ParticleField({ start }: { start: boolean }) {
     const parent = canvas.parentElement!
     parent.addEventListener('pointermove', onPointerMove, { passive: true })
     parent.addEventListener('pointerleave', onPointerLeave)
-    window.addEventListener('resize', onResize)
+    const ro = new ResizeObserver(() => {
+      if (canvas.clientWidth !== w || canvas.clientHeight !== h) onResize()
+    })
+    ro.observe(canvas)
     return () => {
       cancelAnimationFrame(raf)
       clearTimeout(resizeTimer)
       io.disconnect()
+      ro.disconnect()
       parent.removeEventListener('pointermove', onPointerMove)
       parent.removeEventListener('pointerleave', onPointerLeave)
-      window.removeEventListener('resize', onResize)
     }
   }, [])
 
